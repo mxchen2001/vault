@@ -27,7 +27,7 @@ export default class Directory {
     }
 
     getChildren() {
-        return this.currentNode.children.map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
+        return this.currentNode.children.map(child => child.name);
     }
 
     getFiles() {

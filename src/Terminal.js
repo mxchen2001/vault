@@ -1,6 +1,5 @@
 import './Terminal.css';
 import { useState, useEffect, useRef } from 'react';
-import Directory from './Directory'
 
 const HELP_MESSAGE = [
   'Currently Working:',
@@ -11,6 +10,7 @@ const HELP_MESSAGE = [
   ' - pwd - print working directory',
   ' - help - show this message',
   ' - open/man <file> - opens the contents of the file',
+  ' - about - Michael\'s Amazing Emulated SHell'
 ];
 
 const HELP_STYLE = 'help-message';
@@ -22,9 +22,16 @@ const FILE_STYLE = 'file-message';
 const RAW_PATH = "https://raw.githubusercontent.com/mxchen2001/mind-palace/"
 
 export default function Terminal(props) {
+    const today = new Date();
+    const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    
     const [dimensions, setDimensions] = useState({width: window.innerWidth, height: window.innerHeight});
-
-    const [consoleOut, setConsoleOut] = useState([]);
+    const [consoleOut, setConsoleOut] = useState([
+      {
+        type: 'default',
+        message: 'Current Login Time: ' + time,
+      }
+    ]);
 
     const [previousText, setPreviousText] = useState([]);
     const [previousTextPtr, setPreviousTextPtr] = useState(previousText.length);
@@ -47,7 +54,15 @@ export default function Terminal(props) {
 
     useEffect(() => {
       const handleEnter = (event) => {
-        if (event.key === 'Enter') {
+        if (event.key === 'Tab') {
+          const tokens = currentLine.current.value.split(' ')
+          const autocompleteToken = tokens.length > 0 ? tokens[tokens.length - 1]: '';
+          const possibleToken = currentDirectory.getChildren()?.find(name => name.startsWith(autocompleteToken));
+          if (possibleToken) {
+            const completedString = tokens.length > 1 ? tokens.slice(0, -1).join(' ') + ' ' + possibleToken + ' ' : possibleToken;
+            currentLine.current.value = completedString
+          }
+        } else if (event.key === 'Enter') {
           setPreviousTextPtr(previousText.length + 1);
           setPreviousText([...previousText, currentLine.current.value]);
 
@@ -100,6 +115,11 @@ export default function Terminal(props) {
                 message: message + '\n'
               }
             }));
+          } else if (command === 'about') {
+            stdoutQueue.push({
+              className: HELP_STYLE,
+              message: 'Michael\'s Amazing Emulated SHell'
+            });
           } else if (command === 'man' || command === 'open') {
             if (args.length > 1) {
               const url = currentDirectory.getHref(RAW_PATH, args[1]);
@@ -158,7 +178,7 @@ export default function Terminal(props) {
       <div className="window">
         <div className="topbar">
           <p className="shellname">
-            MASH {dimensions.width} x {dimensions.height}
+            MAESH {dimensions.width} x {dimensions.height}
           </p>
           <p className="circle" style={{backgroundColor:'#ef6251'}}/>
           <p className="circle" style={{backgroundColor:'#f6b73d'}}/>
@@ -166,7 +186,6 @@ export default function Terminal(props) {
         </div>
         <div ref={terminalBody} onClick={() => document.getElementById("input-line").focus()} className="textzone">
           <div className="previous-line">
-            Hello World!
             {consoleOut.map((item, index) => {
               return (
                 <div className={item.className} key={index}>{item.message}</div>
@@ -176,6 +195,7 @@ export default function Terminal(props) {
           <div className="current-line">
             <div>{currentDirectory.getCurrentPath()}</div>
             <input id="input-line" ref={currentLine} className="current-input" autoFocus/>
+            <a tabIndex="0" onFocus={() => document.getElementById("input-line").focus()} />
           </div>
         </div>
       </div>

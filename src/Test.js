@@ -61,7 +61,7 @@ export default function Test() {
                     })
                 })
 
-                console.log(dummyDir.getChildren());
+                // console.log(dummyDir.getChildren());
                 setHref(dummyDir.getHref(RAW_PATH, 'README.md'));
 
 
