@@ -93,13 +93,14 @@ export default function Terminal(props) {
           const args = currentLine.current.value.split(' ');
 
           if (command === 'ls') {
+            const [childDir, childFiles] = currentDirectory.ls(args.length > 1 ? args[1] : '');
             stdoutQueue.push({
               className: DIRECTORY_STYLE,
-              message: currentDirectory.getDirectories()
+              message: childDir
             });
             stdoutQueue.push({
               className: FILE_STYLE,
-              message: currentDirectory.getFiles()
+              message: childFiles
             });
           } else if (command === 'cd') {
             if (args.length > 1) {

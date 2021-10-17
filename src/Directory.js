@@ -34,12 +34,18 @@ export default class Directory {
         return this.currentNode.children.map(child => child.name);
     }
 
-    getFiles() {
-        return this.currentNode.children.filter(child => child.type === FILE_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
+    getFiles(node=this.currentNode) {
+        if (node) {
+            return node.children.filter(child => child.type === FILE_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
+        }
+        return null;
     }
 
-    getDirectories() {
-        return this.currentNode.children.filter(child => child.type === DIRECTORY_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
+    getDirectories(node=this.currentNode) {
+        if (node) {
+            return node.children.filter(child => child.type === DIRECTORY_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
+        }
+        return null;
     }
 
     existingDirectory(path) {
@@ -59,6 +65,31 @@ export default class Directory {
         return null;
     }
 
+    ls(path) {
+        let current = this.currentNode;
+        path.split('/').forEach((pathEl) => {
+            if (pathEl === "..") {
+                if (current.parent === null) {
+                    return;
+                }
+                current = current.parent;
+                return;
+            }
+
+            if (pathEl === "~") {
+                current = this.root;
+                return;
+            }
+    
+            const node = current.children.find(child => child.name === pathEl && child.type === DIRECTORY_TYPE);
+            if (node === undefined) {
+                return;
+            }
+            current = node;
+        });
+        return [this.getDirectories(current), this.getFiles(current)];
+    }
+
     mkdir(directory_name) {
         this.currentNode.children.push(new Node(directory_name, DIRECTORY_TYPE, this.currentNode));
     }
@@ -69,9 +100,9 @@ export default class Directory {
         }
     }
 
-    pwd() {
+    pwd(start=this.currentNode) {
         let entirePath = ''
-        let current = this.currentNode;
+        let current = start;
         while (current !== null) {
             entirePath = current.name + '/' + entirePath;
             current = current.parent;
