@@ -10,7 +10,8 @@ const HELP_MESSAGE = [
   ' - touch <file> - create file',
   ' - pwd - print working directory',
   ' - help - show this message',
-  ' - open/man <file> - opens the contents of the file',
+  ' - open <file> - opens the contents of the file',
+  ' - man/less <file> - opens the contents of the in the terminal',
   ' - about - Michael\'s Amazing Emulated SHell'
 ];
 
@@ -133,7 +134,7 @@ export default function Terminal(props) {
               message: 'Michael\'s Amazing Emulated SHell'
             });
 
-          } else if (command === 'man') {
+          } else if (command === 'man' || command === 'less') {
             if (args.length > 1) {
               const url = currentDirectory.getHref(RAW_PATH, args[1].replace('/', ''));
               const options = {
