@@ -26,6 +26,10 @@ export default class Directory {
         return this.path;
     }
 
+    getNode() {
+        return this.currentNode;
+    }
+
     getChildren() {
         return this.currentNode.children.map(child => child.name);
     }

@@ -1,5 +1,6 @@
 import './Terminal.css';
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 
 const HELP_MESSAGE = [
   'Currently Working:',
@@ -55,13 +56,24 @@ export default function Terminal(props) {
     useEffect(() => {
       const handleEnter = (event) => {
         if (event.key === 'Tab') {
-          const tokens = currentLine.current.value.split(' ')
-          const autocompleteToken = tokens.length > 0 ? tokens[tokens.length - 1]: '';
-          const possibleToken = currentDirectory.getChildren()?.find(name => name.startsWith(autocompleteToken));
-          if (possibleToken) {
-            const completedString = tokens.length > 1 ? tokens.slice(0, -1).join(' ') + ' ' + possibleToken + ' ' : possibleToken;
+          const tokens = currentLine.current.value.split(' ');
+          const autocompleteToken = tokens.length > 0 ? tokens[tokens.length - 1].split('/'): '';
+          let currentNode = currentDirectory.getNode();
+          autocompleteToken.forEach((pathEl, index) => {
+            if (currentNode && index == autocompleteToken.length - 1){
+              currentNode = currentNode.children.find(child => child.name.startsWith(pathEl));
+            } else if (currentNode) {
+              currentNode = currentNode.children.find(child => child.name === pathEl && child.type === 0);
+            }
+          });
+
+          if (currentNode && currentNode !== currentDirectory.getNode()) {
+            const previousTokens = autocompleteToken.slice(0, -1).join('/')
+            const completedToken = previousTokens + (previousTokens.length > 0 ? '/' : '') + currentNode.name + '/';
+            const completedString = tokens.length > 1 ? tokens.slice(0, -1).join(' ') + ' ' + completedToken : completedToken;
             currentLine.current.value = completedString
           }
+
         } else if (event.key === 'Enter') {
           setPreviousTextPtr(previousText.length + 1);
           setPreviousText([...previousText, currentLine.current.value]);
@@ -111,7 +123,7 @@ export default function Terminal(props) {
           } else if (command === 'help') {
             stdoutQueue.push(...HELP_MESSAGE.map(message => {
               return {
-                className: HELP_STYLE,
+                className: HELP_STYLE, 
                 message: message + '\n'
               }
             }));
@@ -120,9 +132,36 @@ export default function Terminal(props) {
               className: HELP_STYLE,
               message: 'Michael\'s Amazing Emulated SHell'
             });
-          } else if (command === 'man' || command === 'open') {
+
+          } else if (command === 'man') {
             if (args.length > 1) {
-              const url = currentDirectory.getHref(RAW_PATH, args[1]);
+              const url = currentDirectory.getHref(RAW_PATH, args[1].replace('/', ''));
+              const options = {
+                url: url,
+                method: 'GET',
+              };
+              axios(options).then(res => {
+                  console.log(JSON.stringify(res.data));
+                  // retain whitespace
+                  const lines = res.data.split('\n').map(line => {
+                    return {
+                      className: INFO_STYLE,
+                      message: '>' + line + ' \n'
+                    }
+                  });
+
+                  console.log(lines);
+                  setConsoleOut([...stdoutQueue, ...lines]);
+                }).catch(err => {
+                  console.log(err);
+                  setConsoleOut([...stdoutQueue]);
+                  currentLine.current.value = '';
+              })
+            }
+            return;
+          } else if (command === 'open') {
+            if (args.length > 1) {
+              const url = currentDirectory.getHref(RAW_PATH, args[1].replace('/', ''));
               if (url) {
                 window.open(url, "_blank")
               }
