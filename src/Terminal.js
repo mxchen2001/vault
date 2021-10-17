@@ -152,6 +152,7 @@ export default function Terminal(props) {
 
                   console.log(lines);
                   setConsoleOut([...stdoutQueue, ...lines]);
+                  currentLine.current.value = '';
                 }).catch(err => {
                   console.log(err);
                   setConsoleOut([...stdoutQueue]);
