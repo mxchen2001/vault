@@ -74,7 +74,7 @@ export default function Terminal(props) {
             } else if (currentNode) {
               if (pathEl == '..') {
                 currentNode = currentNode.parent;
-              } else {
+              } else if (pathEl !== '.') {
                 currentNode = currentNode.children.find(child => child.name === pathEl && child.type === 0);
               }
             }
