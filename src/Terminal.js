@@ -61,17 +61,28 @@ export default function Terminal(props) {
           const tokens = currentLine.current.value.split(' ');
           const autocompleteToken = tokens.length > 0 ? tokens[tokens.length - 1].split('/') : '';
           let currentNode = currentDirectory.getNode();
+          let currentPathEl = '';
           autocompleteToken.forEach((pathEl, index) => {
             if (currentNode && index == autocompleteToken.length - 1) {
-              currentNode = currentNode.children.find(child => child.name.startsWith(pathEl));
+              if (pathEl.startsWith('.')) {
+                currentNode = currentNode.parent;
+                currentPathEl = '..'
+              } else {
+                currentNode = currentNode.children.find(child => child.name.startsWith(pathEl));
+                currentPathEl = currentNode ? currentNode.name : '';
+              }
             } else if (currentNode) {
-              currentNode = currentNode.children.find(child => child.name === pathEl && child.type === 0);
+              if (pathEl == '..') {
+                currentNode = currentNode.parent;
+              } else {
+                currentNode = currentNode.children.find(child => child.name === pathEl && child.type === 0);
+              }
             }
           });
   
-          if (currentNode && currentNode !== currentDirectory.getNode()) {
+          if (currentNode) {
             const previousTokens = autocompleteToken.slice(0, -1).join('/')
-            const completedToken = previousTokens + (previousTokens.length > 0 ? '/' : '') + currentNode.name + '/';
+            const completedToken = previousTokens + (previousTokens.length > 0 ? '/' : '') + currentPathEl + '/';
             const completedString = tokens.length > 1 ? tokens.slice(0, -1).join(' ') + ' ' + completedToken : completedToken;
             currentLine.current.value = completedString
           }
