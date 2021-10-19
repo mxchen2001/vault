@@ -199,14 +199,15 @@ export default function Terminal(props) {
                   message: 'type "help" for more information'
                 });
                 setShowHelp(false);
-              } else {
-                stdoutQueue.push({
-                  className: ERROR_STYLE,
-                  message: 'command not found'
-                });
               }
               break;
-            } }
+            } default: {
+              stdoutQueue.push({
+                className: ERROR_STYLE,
+                message: 'command not found'
+              });
+            }
+          }
           //////////////////////////////////////////////////////////////////////////////
   
   
