@@ -159,13 +159,12 @@ export default function Terminal(props) {
             } case ('less'):
               case ('man'): {
               if (args.length > 1) {
-                const url = currentDirectory.getHref(RAW_PATH, args[1].replace('/', ''));
+                const url = currentDirectory.getHref(RAW_PATH, (args[1][args[1].length - 1] === '/' ? args[1].substring(0, args[1].length - 1) : args[1]));
                 const options = {
                   url: url,
                   method: 'GET',
                 };
                 axios(options).then(res => {
-                  console.log(JSON.stringify(res.data));
                   // retain whitespace
                   const lines = res.data.split('\n').map(line => {
                     return {
@@ -173,12 +172,10 @@ export default function Terminal(props) {
                       message: '>' + line + ' \n'
                     }
                   });
-  
-                  console.log(lines);
                   setConsoleOut([...stdoutQueue, ...lines]);
                   currentLine.current.value = '';
                 }).catch(err => {
-                  console.log(err);
+                  // console.log(err);
                   setConsoleOut([...stdoutQueue]);
                   currentLine.current.value = '';
                 })
@@ -186,7 +183,7 @@ export default function Terminal(props) {
               return;
             } case ('open'): {
               if (args.length > 1) {
-                const url = currentDirectory.getHref(RAW_PATH, args[1].replace('/', ''));
+                const url = currentDirectory.getHref(RAW_PATH, (args[1][args[1].length - 1] === '/' ? args[1].substring(0, args[1].length - 1) : args[1]));
                 if (url) {
                   window.open(url, "_blank")
                 }

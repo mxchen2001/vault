@@ -34,35 +34,55 @@ export default class Directory {
         return this.currentNode.children.map(child => child.name);
     }
 
-    getFiles(node=this.currentNode) {
+    getFiles(node = this.currentNode) {
         if (node) {
             return node.children.filter(child => child.type === FILE_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
         }
         return null;
     }
 
-    getDirectories(node=this.currentNode) {
+    getDirectories(node = this.currentNode) {
         if (node) {
             return node.children.filter(child => child.type === DIRECTORY_TYPE).map(child => child.name).reduce((acc, curr) => acc + ' ' + curr, '');
         }
         return null;
     }
 
-    existingDirectory(path) {
-        const node = this.currentNode.children.find(child => child.name === path && child.type === DIRECTORY_TYPE);
+    existingDirectory(path, lookupNode = this.currentNode) {
+        const node = lookupNode.children.find(child => child.name === path && child.type === DIRECTORY_TYPE);
         return node !== undefined;
     }
 
-    existingFile(path) {
-        const node = this.currentNode.children.find(child => child.name === path && child.type === FILE_TYPE);
+    existingFile(path, lookupNode = this.currentNode) {
+        const node = lookupNode.children.find(child => child.name === path && child.type === FILE_TYPE);
         return node !== undefined;
     }
 
-    getHref(baseURL, fileName) {
-        if (this.existingFile(fileName)) {
-            return baseURL + this.pwd() + '/' + fileName;
-        }
-        return null;
+    getHref(baseURL, filepath) {
+        const pathToken = (this.pwd() + '/' + filepath).split('/');
+        let current = this.currentNode;
+        const filename = pathToken[pathToken.length - 1];
+        pathToken.forEach((pathEl) => {
+            if (pathEl === "..") {
+                if (current.parent === null) {
+                    return;
+                }
+                current = current.parent;
+                return;
+            }
+
+            if (pathEl === "~") {
+                current = this.root;
+                return;
+            }
+
+            const node = current.children.find(child => child.name === pathEl && child.type === DIRECTORY_TYPE);
+            if (node === undefined) {
+                return;
+            }
+            current = node;
+        });
+        return this.existingFile(filename, current) ? baseURL + this.pwd() + '/' + filepath : null;
     }
 
     ls(path) {
@@ -80,7 +100,7 @@ export default class Directory {
                 current = this.root;
                 return;
             }
-    
+
             const node = current.children.find(child => child.name === pathEl && child.type === DIRECTORY_TYPE);
             if (node === undefined) {
                 return;
@@ -100,7 +120,7 @@ export default class Directory {
         }
     }
 
-    pwd(start=this.currentNode) {
+    pwd(start = this.currentNode) {
         let entirePath = ''
         let current = start;
         while (current !== null) {
@@ -124,7 +144,7 @@ export default class Directory {
                 this.currentNode = this.root;
                 return;
             }
-    
+
             const node = this.currentNode.children.find(child => child.name === pathEl && child.type === DIRECTORY_TYPE);
             if (node === undefined) {
                 return;
